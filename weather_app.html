@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App | Week 3 API Assignment</title>
+    <style>
+        /* Reset and basic font styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Main Weather Card */
+        .weather-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            padding: 28px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* Search Form & Inputs */
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #38bdf8;
+        }
+
+        button.search-btn {
+            padding: 12px 18px;
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        button.search-btn:hover {
+            background-color: #0369a1;
+        }
+
+        /* Optional API Key Toggle & Box */
+        .api-settings {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .api-toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .link-btn {
+            background: none;
+            border: none;
+            color: #38bdf8;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .api-input-box {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .api-input-box small {
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Status Messages (Loading & Error) */
+        .status-msg {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            background-color: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+
+        .error {
+            background-color: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Weather Output Section */
+        .weather-result {
+            text-align: center;
+            background-color: #0f172a;
+            border-radius: 16px;
+            padding: 24px 18px;
+            border: 1px solid #334155;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mode-tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .mode-tag.demo {
+            background-color: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .city-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+            margin: 12px 0 6px 0;
+            display: block;
+        }
+
+        .temperature {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: #38bdf8;
+            line-height: 1.1;
+        }
+
+        .condition {
+            font-size: 1.05rem;
+            color: #cbd5e1;
+            text-transform: capitalize;
+            margin-top: 6px;
+            margin-bottom: 20px;
+        }
+
+        /* Bottom Details Grid (Humidity & Feels Like) */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            border-top: 1px solid #1e293b;
+            padding-top: 16px;
+        }
+
+        .detail-item {
+            background-color: #1e293b;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .detail-label {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        /* Quick City Chips for Easy Testing */
+        .quick-cities {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .chip {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .chip:hover {
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="weather-card">
+        <header>
+            <h1>Weather Forecast</h1>
+            <p>Week 3 Assignment • Fetch API &amp; JSON Parsing</p>
+        </header>
+
+        <!-- Search Form -->
+        <form id="weather-form" class="search-form">
+            <div class="input-row">
+                <input type="text" id="city-input" placeholder="Enter city name (e.g. Bengaluru)" required>
+                <button type="submit" class="search-btn">Search</button>
+            </div>
+
+            <!-- OpenWeatherMap API Key Setting -->
+            <div class="api-settings">
+                <div class="api-toggle-row">
+                    <span id="api-status-label">Mode: Built-in Demo Data</span>
+                    <button type="button" id="toggle-api-btn" class="link-btn">Add API Key</button>
+                </div>
+
+                <div id="api-input-box" class="api-input-box hidden">
+                    <input type="password" id="api-key-input" placeholder="Paste your OpenWeatherMap API key here">
+                    <small>Get a free key at openweathermap.org/api. Leave blank to test with built-in demo data.</small>
+                </div>
+            </div>
+        </form>
+
+        <!-- Loading and Error Messages -->
+        <div id="loading-msg" class="status-msg loading hidden">
+            Fetching weather data...
+        </div>
+        <div id="error-msg" class="status-msg error hidden"></div>
+
+        <!-- Weather Output Card -->
+        <section id="weather-result" class="weather-result">
+            <span id="data-source-badge" class="mode-tag demo">Demo Mode</span>
+            <h2 id="city-display" class="city-name">Bengaluru, IN</h2>
+            <span id="weather-icon" class="weather-icon">⛅</span>
+            <div id="temp-display" class="temperature">24°C</div>
+            <p id="condition-display" class="condition">Partly Cloudy</p>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">💧 Humidity</span>
+                    <span id="humidity-display" class="detail-value">62%</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">🌡️ Feels Like</span>
+                    <span id="feels-like-display" class="detail-value">25°C</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Sample Cities -->
+        <div class="quick-cities">
+            <button type="button" class="chip" data-city="Bengaluru">Bengaluru</button>
+            <button type="button" class="chip" data-city="Mumbai">Mumbai</button>
+            <button type="button" class="chip" data-city="London">London</button>
+            <button type="button" class="chip" data-city="Tokyo">Tokyo</button>
+        </div>
+    </main>
+
+    <footer>
+        Created by Tejashwini. C • OpenWeatherMap API Project
+    </footer>
+
+    <script>
+        // Optional: Paste your OpenWeatherMap API key inside the quotes below if you want live data by default
+        const DEFAULT_API_KEY = "";
+
+        // Sample JSON objects matching OpenWeatherMap's response structure for Demo Mode
+        const DEMO_WEATHER_DATA = {
+            "bengaluru": { name: "Bengaluru", sys: { country: "IN" }, main: { temp: 24.3, feels_like: 24.8, humidity: 62 }, weather: [{ main: "Clouds", description: "partly cloudy" }] },
+            "bangalore": { name: "Bengaluru", sys: { country: "IN" }, main: { temp: 24.3, feels_like: 24.8, humidity: 62 }, weather: [{ main: "Clouds", description: "partly cloudy" }] },
+            "mumbai": { name: "Mumbai", sys: { country: "IN" }, main: { temp: 31.0, feels_like: 35.2, humidity: 78 }, weather: [{ main: "Haze", description: "humid and hazy" }] },
+            "delhi": { name: "New Delhi", sys: { country: "IN" }, main: { temp: 22.5, feels_like: 21.9, humidity: 48 }, weather: [{ main: "Clear", description: "clear sky" }] },
+            "london": { name: "London", sys: { country: "GB" }, main: { temp: 11.4, feels_like: 9.8, humidity: 81 }, weather: [{ main: "Rain", description: "light rain" }] },
+            "tokyo": { name: "Tokyo", sys: { country: "JP" }, main: { temp: 14.2, feels_like: 13.1, humidity: 55 }, weather: [{ main: "Clear", description: "sunny and clear" }] },
+            "new york": { name: "New York", sys: { country: "US" }, main: { temp: 9.6, feels_like: 7.4, humidity: 60 }, weather: [{ main: "Clouds", description: "scattered clouds" }] }
+        };
+
+        // Select DOM elements
+        const weatherForm = document.getElementById("weather-form");
+        const cityInput = document.getElementById("city-input");
+        const apiKeyInput = document.getElementById("api-key-input");
+        const toggleApiBtn = document.getElementById("toggle-api-btn");
+        const apiInputBox = document.getElementById("api-input-box");
+        const apiStatusLabel = document.getElementById("api-status-label");
+
+        const loadingMsg = document.getElementById("loading-msg");
+        const errorMsg = document.getElementById("error-msg");
+        const weatherResult = document.getElementById("weather-result");
+
+        // Toggle API Key input visibility
+        toggleApiBtn.addEventListener("click", function() {
+            apiInputBox.classList.toggle("hidden");
+            if (apiInputBox.classList.contains("hidden")) {
+                toggleApiBtn.textContent = "Add API Key";
+            } else {
+                toggleApiBtn.textContent = "Hide";
+            }
+        });
+
+        // Update status label when user types an API key
+        apiKeyInput.addEventListener("input", function() {
+            if (apiKeyInput.value.trim() !== "") {
+                apiStatusLabel.textContent = "Mode: Live OpenWeatherMap API";
+            } else {
+                apiStatusLabel.textContent = "Mode: Built-in Demo Data";
+            }
+        });
+
+        // Helper function to pick a weather emoji based on OpenWeatherMap condition
+        function getWeatherEmoji(conditionMain) {
+            const condition = conditionMain.toLowerCase();
+            if (condition.includes("clear")) return "☀️";
+            if (condition.includes("cloud")) return "⛅";
+            if (condition.includes("rain") || condition.includes("drizzle")) return "🌧️";
+            if (condition.includes("thunder")) return "⛈️";
+            if (condition.includes("snow")) return "❄️";
+            if (condition.includes("mist") || condition.includes("haze") || condition.includes("fog")) return "🌫️";
+            return "🌤️";
+        }
+
+        // Update the DOM card with parsed JSON data
+        function displayWeatherData(data, isLive) {
+            const cityName = data.name;
+            const country = data.sys.country;
+            const temp = Math.round(data.main.temp);
+            const feelsLike = Math.round(data.main.feels_like);
+            const humidity = data.main.humidity;
+            const conditionMain = data.weather[0].main;
+            const description = data.weather[0].description;
+
+            document.getElementById("city-display").textContent = cityName + ", " + country;
+            document.getElementById("weather-icon").textContent = getWeatherEmoji(conditionMain);
+            document.getElementById("temp-display").textContent = temp + "°C";
+            document.getElementById("condition-display").textContent = description;
+            document.getElementById("humidity-display").textContent = humidity + "%";
+            document.getElementById("feels-like-display").textContent = feelsLike + "°C";
+
+            const badge = document.getElementById("data-source-badge");
+            if (isLive) {
+                badge.textContent = "Live API Data";
+                badge.classList.remove("demo");
+            } else {
+                badge.textContent = "Demo Mode";
+                badge.classList.add("demo");
+            }
+
+            weatherResult.classList.remove("hidden");
+        }
+
+        // Main async function using Fetch API to get weather data
+        async function fetchWeather(city) {
+            const cleanedCity = city.trim();
+            if (cleanedCity === "") {
+                showError("Please enter a city name.");
+                return;
+            }
+
+            // Show loading indicator and hide previous errors
+            errorMsg.classList.add("hidden");
+            loadingMsg.classList.remove("hidden");
+
+            const activeKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
+
+            // If an OpenWeatherMap API key is provided, make a real Fetch API request
+            if (activeKey !== "") {
+                const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cleanedCity)}&appid=${activeKey}&units=metric`;
+
+                try {
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error("City not found. Please check the spelling.");
+                        } else if (response.status === 401) {
+                            throw new Error("Invalid API key. Please check your OpenWeatherMap key.");
+                        } else {
+                            throw new Error("Unable to fetch weather data right now.");
+                        }
+                    }
+
+                    // Parse JSON response
+                    const data = await response.json();
+                    loadingMsg.classList.add("hidden");
+                    displayWeatherData(data, true);
+
+                } catch (err) {
+                    loadingMsg.classList.add("hidden");
+                    weatherResult.classList.add("hidden");
+                    showError(err.message);
+                }
+            } else {
+                // Fallback Demo Mode when no API key is entered yet
+                setTimeout(function() {
+                    loadingMsg.classList.add("hidden");
+                    const key = cleanedCity.toLowerCase();
+
+                    if (DEMO_WEATHER_DATA[key]) {
+                        displayWeatherData(DEMO_WEATHER_DATA[key], false);
+                    } else {
+                        weatherResult.classList.add("hidden");
+                        showError("City not in demo list. Try Bengaluru, Mumbai, London, Tokyo, or add your OpenWeatherMap API key.");
+                    }
+                }, 350);
+            }
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.remove("hidden");
+        }
+
+        // Handle form submit
+        weatherForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            fetchWeather(cityInput.value);
+        });
+
+        // Handle quick city buttons
+        const chips = document.querySelectorAll(".chip");
+        chips.forEach(function(chip) {
+            chip.addEventListener("click", function() {
+                const selectedCity = chip.getAttribute("data-city");
+                cityInput.value = selectedCity;
+                fetchWeather(selectedCity);
+            });
+        });
+    </script>
+</body>
+</html>
